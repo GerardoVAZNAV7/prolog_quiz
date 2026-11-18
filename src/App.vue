@@ -1,9 +1,31 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { preguntas, categorias } from './data/quiz.js'
 import { ejercicios, revisar } from './data/practica.js'
 
 const pantalla = ref('menu')
+
+/* ---------- SONIDO ---------- */
+let audio
+function sonar(ok) {
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!AC) return
+  audio ??= new AC()
+  if (audio.state === 'suspended') audio.resume()
+  const t = audio.currentTime
+  const notas = ok ? [660, 990] : [240, 165]
+  notas.forEach((f, n) => {
+    const o = audio.createOscillator(), g = audio.createGain()
+    o.type = ok ? 'sine' : 'triangle'
+    o.frequency.value = f
+    const t0 = t + n * 0.11
+    g.gain.setValueAtTime(0.0001, t0)
+    g.gain.exponentialRampToValueAtTime(ok ? 0.12 : 0.1, t0 + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.1)
+    o.connect(g).connect(audio.destination)
+    o.start(t0); o.stop(t0 + 0.11)
+  })
+}
 
 /* ---------- QUIZ ---------- */
 const cat = ref('Todas')
@@ -25,6 +47,7 @@ function responder(n) {
   if (elegida.value !== null) return
   elegida.value = n
   if (n === actual.value.a) puntos.value++
+  sonar(n === actual.value.a)
 }
 function siguiente() { elegida.value = null; i.value++ }
 
@@ -49,13 +72,23 @@ function iniciarPractica() {
 }
 function limpiar() { texto.value = ''; estado.value = ''; pista.value = false; solucion.value = false }
 function comprobar() {
-  if (revisar(texto.value, ej.value.ok)) {
-    estado.value = 'ok'
-    if (!bien.value.includes(j.value)) bien.value.push(j.value)
-  } else estado.value = 'mal'
+  const ok = revisar(texto.value, ej.value.ok)
+  estado.value = ok ? 'ok' : 'mal'
+  if (ok && !bien.value.includes(j.value)) bien.value.push(j.value)
+  sonar(ok)
 }
 function sigEj() { j.value++; limpiar() }
 
+/* Atajos: A-D o 1-4 responden la pregunta actual. */
+function atajo(e) {
+  if (pantalla.value !== 'quiz' || fin.value || elegida.value !== null) return
+  if (e.ctrlKey || e.metaKey || e.altKey) return
+  const k = e.key.toLowerCase()
+  const n = Math.max('abcd'.indexOf(k), '1234'.indexOf(k))
+  if (n >= 0 && n < actual.value.o.length) { e.preventDefault(); responder(n) }
+}
+onMounted(() => window.addEventListener('keydown', atajo))
+onUnmounted(() => window.removeEventListener('keydown', atajo))
 function ir(t) {
   if (t === 'menu') pantalla.value = 'menu'
   else if (t === 'quiz' && pantalla.value !== 'quiz') iniciarQuiz()
@@ -133,7 +166,7 @@ padrede(X,Y).</pre>
                     class="op"
                     :class="{ bien: elegida !== null && n === actual.a, mal: elegida === n && n !== actual.a }"
                     :disabled="elegida !== null"
-                    @click="responder(n)">{{ o }}</button>
+                    @click="responder(n)">{{ o }}<span class="tecla" aria-hidden="true">{{ 'ABCD'[n] }}</span></button>
           </div>
           <div v-if="elegida !== null" class="veredicto" aria-live="polite">
             <p><span class="pill" :class="elegida === actual.a ? 'pos' : 'neg'">{{ elegida === actual.a ? 'Correcto' : 'Incorrecto' }}</span> {{ actual.e }}</p>
@@ -162,7 +195,7 @@ padrede(X,Y).</pre>
             <div><dt>Restantes</dt><dd>{{ lista.length - i - 1 }}</dd></div>
             <div><dt>Categoría</dt><dd>{{ actual.cat }}</dd></div>
           </dl>
-          <p class="nota">Cada acierto suma un punto. Las preguntas salen en orden aleatorio.</p>
+          <p class="nota">Cada acierto suma un punto. Responde con A-D o 1-4.</p>
         </aside>
       </div>
     </template>
@@ -332,8 +365,10 @@ h2.pregunta { font-size: 26px; line-height: 1.25; letter-spacing: -0.015em; }
 }
 .op:hover:not(:disabled) { border-color: var(--control); }
 .op:disabled { cursor: default; border-color: var(--border); }
+.tecla { margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 12px; }
 .op.bien { background: var(--pos-bg); border-color: var(--pos-line); color: var(--pos-ink); }
 .op.mal { background: var(--neg-bg); border-color: var(--neg-line); color: var(--neg-ink); }
+.op.bien .tecla, .op.mal .tecla { color: inherit; }
 
 /* Avisos y veredicto */
 .veredicto { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 16px; }
@@ -399,6 +434,7 @@ h3 + pre { margin-top: 12px; }
   .barra, .lienzo { padding-left: 16px; padding-right: 16px; }
   nav { gap: 16px; }
   h1 { font-size: 22px; }
+  h2.pregunta { font-size: 20px; }
   .card { padding: 16px; }
 }
 </style>

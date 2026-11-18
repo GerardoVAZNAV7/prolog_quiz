@@ -51,7 +51,7 @@ export const preguntas = [
   q('Jarras', '¿Para qué sirve \\+ member(Nuevo, Visitados)?',
     ['Para contar los estados visitados', 'Para evitar ciclos infinitos', 'Para imprimir el camino final', 'Para vaciar las dos jarras'], 1,
     'Sin ella Prolog llenaría y vaciaría la misma jarra para siempre.'),
-  q('Jarras', 'Verter la de 5 en la de 3 desde j(0,5). ¿Qué estado resulta?',
+  q('Jarras', 'Desde j(0,5), ¿qué sale al verter 5 en 3?',
     ['j(3,2)', 'j(2,3)', 'j(0,2)', 'j(3,5)'], 0,
     'Caben 3 litros: la de 3 queda llena y a la de 5 le sobran 2.'),
 
@@ -70,7 +70,7 @@ export const preguntas = [
     'Todos empiezan a la izquierda con la barca y todos terminan a la derecha.'),
 
   // ---------- 8 REINAS ----------
-  q('8 Reinas', 'Si el tablero se representa como lista [F1,...,F8], ¿qué significa cada elemento?',
+  q('8 Reinas', '¿Qué guarda cada elemento de [F1,...,F8]?',
     ['La fila de la reina de esa columna', 'La columna en que está la reina', 'El número de ataques que recibe', 'El color de la casilla ocupada'], 0,
     'Cada columna tiene una reina; el valor es su fila. Así nunca coinciden en columna.'),
   q('8 Reinas', '¿Cómo detectas que dos reinas están en la misma diagonal?',
@@ -94,13 +94,13 @@ export const preguntas = [
     'Se usa all_different en filas, columnas y bloques; luego label prueba valores.'),
 
   // ---------- AJEDREZ ----------
-  q('Ajedrez', 'Para el caballo, con DC y DF las diferencias absolutas de columna y fila, ¿cuándo es un movimiento válido?',
+  q('Ajedrez', 'Con DC y DF, ¿cuándo salta el caballo?',
     ['DC =:= DF', 'DC*DF =:= 2', 'DC + DF =:= 1', 'DC =:= 0'], 1,
     'El caballo se mueve en L: (1,2) o (2,1), y 1*2 = 2*1 = 2.'),
-  q('Ajedrez', '¿Cuándo una torre ataca otra casilla (sin piezas en medio)?',
+  q('Ajedrez', '¿Cuándo ataca una torre sin piezas en medio?',
     ['Si comparten la diagonal', 'Si comparten fila o columna', 'Solo si comparten la fila', 'Solo si están a distancia 2'], 1,
     'La torre se mueve en línea recta.'),
-  q('Ajedrez', "Con el hecho pieza(rey,blanco,e,1), ¿qué consulta pregunta dónde están los reyes?",
+  q('Ajedrez', 'Con pieza(rey,blanco,e,1), ¿qué consulta lo halla?',
     ['pieza(rey,C,F,_).', "pieza('rey',C,F).", 'pieza(rey,C).', 'pieza(rey).'], 0,
     'Dejas variables en lo que quieres saber.')
 ]
